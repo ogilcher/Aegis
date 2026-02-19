@@ -1,0 +1,77 @@
+name = "Bug report"
+description: Report a defect or regression
+title: "[Bug]: "
+labels: ["bug"]
+assignees: []
+body:
+    - type: markdown
+    attributes:
+        value: |
+            Thanks for filling a bug. Please include enough detail to reproduce it locally.
+            
+    - type: dropdown
+    id: area
+    attributes:
+        label: Area
+        options:
+            - iOS
+            - Crypto (E2EE)
+            - Database (Supabase/Postgres)
+            - Sync
+            - CI/Tooling
+            - Docs
+            - Other
+    validations:
+        required: true
+        
+    - type: textarea
+    id: summary
+    attributes:
+        label: Summary
+        description: What happened?
+        placeholder: "App crashes when saving a note after unlocking..."
+    validations:
+        required: true
+        
+    - type: textarea
+    id: expected
+    attributes:
+        label: Expected behavior
+        placeholder: "Saving should succeed and the note should sync."
+    validations:
+        required: true
+        
+    - type: textarea
+    id: steps
+    attributes:
+        label: Steps to reproduce
+        description: Provide exact steps, ideally minimal.
+        placeholder: |
+            1) Fresh install
+            2) Sign in
+            3) Unlock vault
+            4) Create note
+            5) Tap Save
+        validations:
+            required: true
+            
+    - type: textarea
+    id: logs
+    attributes:
+        label: Logs / screenshots
+        description: Redact tokens/keys. Do NOT paste secrets.
+        placeholder: "Crash log snippet, CI link, screenshots..."
+    validations:
+        required: false
+        
+    - type: textarea
+    id: env
+    attributes:
+        label: Environment
+        placeholder |
+            - Device: iPhone 15 Pro (sim ok)
+            - iOS: 17.x
+            - App version/commit: abc123
+            - Supabase: local/dev/prod
+    validations:
+        required: true

@@ -1,0 +1,25 @@
+name: "Chore / Tech debt"
+description: Maintenance, refractors, tooling, cleanup
+title: "[Chore]: "
+labels: ["chore"]
+assignees: []
+body:
+    - type: textarea
+    id: scope
+    attributes:
+        label: Scope
+        placeholder: "Refractor repository layer to remove duplicated mapping logic..."
+    validations:
+        required: true
+        
+    - type: textarea
+    id: definition
+    attributes:
+        label: Definition of done
+        placeholder: |
+            - No behavior change
+            - Tests updated/added
+            - Lint passes
+            - Docs updated (if needed)
+    validations:
+        required: true
