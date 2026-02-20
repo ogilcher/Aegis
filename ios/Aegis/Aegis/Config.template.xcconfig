@@ -1,0 +1,9 @@
+//
+//  Config.template.xcconfig
+//  Aegis
+//
+//  Created by Oliver Gilcher on 2/19/26.
+//
+
+SUPABASE_URL =
+SUPABASE_KEY =

@@ -1,0 +1,9 @@
+//
+//  Config.xcconfig
+//  Aegis
+//
+//  Created by Oliver Gilcher on 2/19/26.
+//
+
+SUPABASE_URL = "https://hukresqqehdvajcukjyh.supabase.co"
+SUPABASE_KEY = "sb_publishable_3YxxcTSAMAJcR4t5KupWgw_ZFTK7X7f"

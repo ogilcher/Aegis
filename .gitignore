@@ -1,0 +1,39 @@
+
+###################################
+# Xcode
+###################################
+
+# User data
+Xcuserdata/
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+*.xcscmblueprint
+
+# Xcode build results
+build/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Package.resolved
+
+# Playground
+timeline.xctimeline
+playground.xcworkspace
+
+###################################
+# Secrets / Config
+###################################
+
+# Environment files
+Config.xcconfig
+.env
+.env.*
+*.env
+
+
