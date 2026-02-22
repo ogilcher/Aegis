@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct AppRoot: View {
+    @EnvironmentObject private var coordinator: AppCoordinator
+    
     var body: some View {
         VStack {
             Text("Hello World!")

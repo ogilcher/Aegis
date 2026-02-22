@@ -14,14 +14,18 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack(path: $coordinator.path) {
-            AppRoot()
+            ScreenRegistry.build(for: coordinator.root, coordinator: coordinator)
                 .navigationDestination(for: AppScreen.self) { screen in
-                    // Screen Registry
+                    ScreenRegistry.build(for: screen, coordinator: coordinator)
                 }
         }
         .task {
             await coordinator.bootstrapSession()
         }
+        .onOpenURL { url in
+            coordinator.handleAuthCallback(url)
+        }
+        .environmentObject(coordinator)
         .theme(.default)
     }
 }

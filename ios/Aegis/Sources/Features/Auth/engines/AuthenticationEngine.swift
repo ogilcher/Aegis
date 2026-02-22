@@ -21,13 +21,19 @@ struct AuthDataResultModel {
 @MainActor
 final class AuthenticationEngine {
     
-    let supabase = SupabaseClient(
-        supabaseURL: URL(string: Bundle.main.infoDictionary?["SUPABASE_URL"] as? String ?? "")!,
-        supabaseKey: Bundle.main.infoDictionary?["SUPABASE_KEY"] as? String ?? ""
-    )
+    private let db: SupabaseClient
+    let redirectTo = URL(string: "aegis://auth-callback")!
+    
+    init(db: SupabaseClient) {
+        self.db = db
+    }
+    
+    @MainActor convenience init() {
+        self.init(db: Supabase.client)
+    }
     
     func getAuthenticatedUser() async throws -> AuthDataResultModel {
-        guard let user = try? await supabase.auth.user() else {
+        guard let user = try? await db.auth.user() else {
             throw URLError(.badServerResponse)
         }
         
@@ -35,20 +41,21 @@ final class AuthenticationEngine {
     }
     
     func signOut() async throws {
-        try await supabase.auth.signOut()
+        try await db.auth.signOut()
     }
 }
 
 extension AuthenticationEngine {
     @discardableResult
     func createUser(email: String, password: String) async throws -> AuthDataResultModel {
-        let authDataResult = try await supabase.auth.signUp(email: email, password: password)
+        let authDataResult = try await db.auth.signUp(email: email, password: password, redirectTo: redirectTo)
         return AuthDataResultModel(user: authDataResult.user)
     }
     
     @discardableResult
     func signInUser(email: String, password: String) async throws -> AuthDataResultModel {
-        let authDataResult = try await supabase.auth.signIn(email: email, password: password)
+        let authDataResult = try await db.auth.signIn(email: email, password: password)
         return AuthDataResultModel(user: authDataResult.user)
     }
 }
+

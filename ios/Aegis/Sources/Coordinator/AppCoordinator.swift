@@ -12,16 +12,18 @@ import Combine
 
 enum AppScreen: Hashable {
     
-    // Auth
-    case tosAgreement
-    case signIn
-    case signUp
+    case auth(AuthPath)
     
     // Main root
     case root
     case home
     
     // TODO: Category Routing
+}
+
+// MARK: - Auth Path
+enum AuthPath: String, CaseIterable, Hashable {
+    case tosAgreement, signIn, signUp, validateEmail
 }
 
 // MARK: - Helpers
@@ -37,13 +39,20 @@ private func lpUpdateWithoutAnimation(_ body: () -> Void) {
     withTransaction(.noAnimation, body)
 }
 
+protocol SessionProviding {
+    func getAuthenticatedUser() throws -> AuthDataResultModel
+    func signOut() throws
+}
+
+
+
 // MARK: - App Coordinator
 
 @MainActor
 final class AppCoordinator: ObservableObject {
     
     // MARK: - Dependencies
-    let authEngine: AuthenticationEngine = .init()
+    var authEngine: AuthenticationEngine?
     
     // MARK: - Navigation state
     @Published var root: AppScreen = .root
@@ -52,10 +61,10 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Session state
     
     @Published var isAuthenticated = false
-    // TODO: Get current user
+    @Published var user: DBUser?
     
     // MARK: - ViewModels
-    // ...
+    @Published var authViewModel: AuthViewModel?
     
     // MARK: - Derived state
     // ...
@@ -71,12 +80,13 @@ final class AppCoordinator: ObservableObject {
     
     @MainActor
     func bootstrapSession() async {
-        // Skil full bootstrap if this is running inside SwiftUI Previews
+        // Skip full bootstrap if this is running inside SwiftUI Previews
         if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
             print("bootstrap: running in Previews - skipping session bootstrap")
             lpUpdateWithoutAnimation {
                 self.isAuthenticated = false
-                self.didBootstrap = true
+                self.user = nil
+                self.authViewModel = nil
                 
                 self.goToRoot(.root)
             }
@@ -86,9 +96,10 @@ final class AppCoordinator: ObservableObject {
         guard !didBootstrap else { return }
         didBootstrap = true
         
+        // Starting bootstrap sequence
         print("bootstrap: starting...")
-        
-        let authUser = try? await authEngine.getAuthenticatedUser()
+        self.authEngine = AuthenticationEngine()
+        let authUser = try? await authEngine!.getAuthenticatedUser()
         print("bootstrap: auth snapshot -> \(authUser == nil ? "nil" : "exists")")
         
         await Task.yield()
@@ -98,7 +109,9 @@ final class AppCoordinator: ObservableObject {
         } else {
             lpUpdateWithoutAnimation {
                 self.isAuthenticated = false
-                // ...
+                self.user = nil
+                
+                authViewModel = AuthViewModel(engine: authEngine!)
             }
         }
         
@@ -107,19 +120,18 @@ final class AppCoordinator: ObservableObject {
     }
     
     private func bootstrapWithAuthenticatedUser(_ authUser: AuthDataResultModel) async {
-        do {
-            // Get DB User (seperate from auth)
-            // ...
-            
-        } catch {
-            print("bootstrap: fetch user failed: \(error)")
-            
-            lpUpdateWithoutAnimation {
-                self.isAuthenticated = false
-                // ...
-                
-            }
-        }
+//        do {
+//
+//            
+//        } catch {
+//            print("bootstrap: fetch user failed: \(error)")
+//            
+//            lpUpdateWithoutAnimation {
+//                self.isAuthenticated = false
+//                // ...
+//                
+//            }
+//        }
     }
     
     // MARK: - Central Gate
@@ -131,13 +143,35 @@ final class AppCoordinator: ObservableObject {
         
         if !isAuthenticated {
             lpUpdateWithoutAnimation {
-                self.goToRoot(.tosAgreement)
+                self.goToRoot(.auth(.tosAgreement))
             }
             
             return
         }
         
         goHome()
+    }
+    
+    // MARK: - Auth Flow
+    
+    func handleSignInSuccess() async {
+        lpUpdateWithoutAnimation {
+            self.isAuthenticated = true
+        }
+        let authUser = try? await authEngine?.getAuthenticatedUser()
+
+        applyGate(using: authUser)
+    }
+    
+    func handleAuthCallback(_ url: URL) {
+        Task {
+            do {
+                try await Supabase().establishSession(url)
+                self.isAuthenticated = true
+                // TODO: Make this actually create a user object
+                applyGate(using: nil)
+            }
+        }
     }
     
     // MARK: - Main Navigation
