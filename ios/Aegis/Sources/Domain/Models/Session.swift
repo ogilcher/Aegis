@@ -11,7 +11,7 @@ import Foundation
 
 public enum SessionState: Equatable, Sendable {
     case signOut
-    case awaitEmailVerification(AwaitingEmailVerification)
+    case awaitEmailVerification(AwaitingEmailVerfication)
     case signedIn(Session)
 }
 

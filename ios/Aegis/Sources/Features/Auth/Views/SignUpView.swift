@@ -38,14 +38,8 @@ struct SignUpView: View {
     
     func signUp() {
         Task {
-            
-            guard let result = try? await viewModel.signUp(email: email, password: password).get() else {
-                print("unable to sign up")
-                return
-            }
-            
+            _ = try? await viewModel.signUp(email: email, password: password).get()
         }
-        print("successful sign up")
         coordinator.push(.auth(.validateEmail))
     }
 }
