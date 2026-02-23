@@ -1,0 +1,17 @@
+# Core API
+fastapi==0.131.0
+unicorn[standard]==1.0.3
+
+# HTTP client (Supabase REST + JWKS fetch)
+httpx==0.27.2
+
+# Validation / settings
+pydantic==2.12.5
+pydantic-settings==2.13.1
+email-validator==2.3.0
+
+# JWT verification (Supabase access tokens)
+python-jose[cryptography]==3.5.0
+
+# Environment loading
+python-dotenv==1.2.1
