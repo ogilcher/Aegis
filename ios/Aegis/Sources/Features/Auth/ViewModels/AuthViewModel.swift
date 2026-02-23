@@ -1,21 +1,28 @@
 //
-//  SignUpViewModel.swift
+//  AuthViewModel.swift
 //  Aegis
 //
-//  Created by Oliver Gilcher on 2/20/26.
+//  Created by Oliver Gilcher on 2/19/26.
 //
 
 import Foundation
 import Combine
 
-// MARK: - SignUp ViewModel
+// MARK: - Errors
+
+enum FieldError: Hashable { case email, password }
+enum AuthError: Error, Equatable { case invalidForm, emailInUse, noAccountFound, other }
+
+// MARK: - Auth ViewModel
 
 @MainActor
-final class SignUpViewModel: ObservableObject {
-    enum FieldError: Hashable { case email, password }
-    enum AuthError: Error, Equatable { case invalidForm, emailInUse, other }
+final class AuthViewModel: ObservableObject {
+    
+    // MARK: - Properties
     
     let engine: AuthenticationEngine
+    
+    // MARK: - Init
     
     init(engine: AuthenticationEngine) { self.engine = engine }
     
@@ -23,17 +30,19 @@ final class SignUpViewModel: ObservableObject {
     
     func signUp(email: String, password: String) async throws -> Result<AuthDataResultModel, AuthError> {
         let fieldErrors = validateAll(email, password)
-        guard fieldErrors.isEmpty else { return .failure(.invalidForm)}
+        guard fieldErrors.isEmpty else { return .failure(.invalidForm) }
         
         do {
-            guard let result = try? await engine.createUser(email: email, password: password) else { throw AuthError.other }
+            let result = try await engine.createUser(email: email, password: password)
             return .success(result)
         } catch {
             let ns = error as NSError
-            if ns.code == 1701178237 { return .failure(.emailInUse) }
+            if ns.code == 1701118880 { return .failure(.emailInUse) }
             return .failure(.other)
         }
     }
+    
+    // MARK: - Helpers
     
     func validateAll(_ email: String, _ password: String) -> [FieldError] {
         var errors: [FieldError] = []

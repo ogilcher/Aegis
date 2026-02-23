@@ -8,7 +8,11 @@
 import Foundation
 import Supabase
 
+// MARK: - Supabase
+
 final class Supabase {
+    
+    // MARK: - Client
     
     static var client: SupabaseClient {
         
@@ -23,8 +27,9 @@ final class Supabase {
         return SupabaseClient(supabaseURL: url, supabaseKey: key)
     }
     
+    // MARK: - Helpers
+    
     func establishSession(_ url: URL) async throws {
         Supabase.client.auth.handle(url)
     }
-
 }

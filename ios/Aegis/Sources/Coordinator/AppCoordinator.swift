@@ -13,6 +13,7 @@ import Combine
 enum AppScreen: Hashable {
     
     case auth(AuthPath)
+    case health(HealthPath)
     
     // Main root
     case root
@@ -22,8 +23,15 @@ enum AppScreen: Hashable {
 }
 
 // MARK: - Auth Path
+
 enum AuthPath: String, CaseIterable, Hashable {
     case tosAgreement, signIn, signUp, validateEmail
+}
+
+// MARK: - Health Path
+
+enum HealthPath: String, CaseIterable, Hashable {
+    case landingPage
 }
 
 // MARK: - Helpers
@@ -44,17 +52,17 @@ protocol SessionProviding {
     func signOut() throws
 }
 
-
-
 // MARK: - App Coordinator
 
 @MainActor
 final class AppCoordinator: ObservableObject {
     
     // MARK: - Dependencies
+    
     var authEngine: AuthenticationEngine?
     
     // MARK: - Navigation state
+    
     @Published var root: AppScreen = .root
     @Published var path: [AppScreen] = []
     
@@ -64,7 +72,9 @@ final class AppCoordinator: ObservableObject {
     @Published var user: DBUser?
     
     // MARK: - ViewModels
+    
     @Published var authViewModel: AuthViewModel?
+    @Published var healthViewModel: HealthViewModel?
     
     // MARK: - Derived state
     // ...
@@ -173,10 +183,6 @@ final class AppCoordinator: ObservableObject {
             }
         }
     }
-    
-    // MARK: - Main Navigation
-    
-    // MARK: - Logout & Utilities
     
     // MARK: - Navigation Helpers
     

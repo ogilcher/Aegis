@@ -8,8 +8,15 @@
 import SwiftUI
 
 struct HomeScreen: View {
+    @EnvironmentObject private var coordinator: AppCoordinator
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Text("Home Screen")
+                .font(.largeTitle.bold())
+            
+            
+        }
     }
 }
 

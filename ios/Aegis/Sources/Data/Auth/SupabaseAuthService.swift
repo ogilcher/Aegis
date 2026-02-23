@@ -7,7 +7,12 @@
 
 import Foundation
 
+// MARK: - Session
+
 extension Session {
+    
+    // MARK: - From Supabase User
+    
     static func fromSupabaseUser(
         userId: UUID,
         email: String?,

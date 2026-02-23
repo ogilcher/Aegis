@@ -14,6 +14,11 @@ struct ScreenRegistry {
     static func build(for screen: AppScreen, coordinator: AppCoordinator) -> some View {
         switch screen {
             
+        // MARK: - Main Navigation
+            
+        case .root:                 return AnyView(AppRoot().navigationBarBackButtonHidden())
+        case .home:                 return AnyView(HomeScreen().navigationBarBackButtonHidden())
+            
         // MARK: - Auth
             
         case .auth(let path):
@@ -27,9 +32,17 @@ struct ScreenRegistry {
             case .signUp:           return AnyView(SignUpView(viewModel: vm).navigationBarBackButtonHidden())
             case .validateEmail:    return AnyView(ValidateEmailView().navigationBarBackButtonHidden())
             }
-
-        case .root:                 return AnyView(AppRoot().navigationBarBackButtonHidden())
-        case .home:                 return AnyView(HomeScreen().navigationBarBackButtonHidden())
+            
+        // MARK: - Health
+            
+        case .health(let path):
+            guard let vm = coordinator.healthViewModel else {
+                return AnyView(HomeScreen())
+            }
+            
+            switch path {
+            case .landingPage:      return AnyView(HealthLandingPage(viewModel: vm).navigationBarBackButtonHidden())
+            }
         }
     }
 }
