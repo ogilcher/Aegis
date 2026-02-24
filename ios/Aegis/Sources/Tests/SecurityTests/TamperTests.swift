@@ -16,6 +16,7 @@ final class TamperTests: XCTestCase {
         print("Original plaintext:", String(decoding: plaintext, as: UTF8.self))
         
         let env = try crypto.encrypt(
+            userId: "user-123",
             domain: .notes,
             recordId: "r1",
             plaintext: plaintext
@@ -48,6 +49,7 @@ final class TamperTests: XCTestCase {
         
         do {
             let _ = try crypto.decrypt(
+                userId: "user-123",
                 domain: .notes,
                 recordId: "r1",
                 envelope: tampered
