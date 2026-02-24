@@ -21,17 +21,18 @@ public final class EncryptionService {
     
     // MARK: - Encrypt
     
-    public func encrypt(
+    public func encrypt (
+        userId: String,
         domain: CryptoDomain,
         recordId: String,
         plaintext: Data
     ) throws -> EncryptedEnvelope {
-        let (kid, masterKey) = try keyManagement.getOrCreateMasterKey()
+        let (kid, masterKey) = try keyManagement.activeMasterKey()
         let domainKey = KeyDerivation.deriveDomainKey(masterKey: masterKey, domain: domain)
         let recordKey = KeyDerivation.deriveRecordKey(domainKey: domainKey, recordId: recordId)
         
         let version = 1
-        let aad = AADBuilder.build(version: version, domain: domain, recordId: recordId)
+        let aad = AADBuilder.build(version: version, userId: userId, domain: domain, recordId: recordId)
         
         do {
             let sealed = try AES.GCM.seal(plaintext, using: recordKey, authenticating: aad)
@@ -42,8 +43,8 @@ public final class EncryptionService {
                 alg: "A256GCM",
                 kid: kid.uuidString,
                 nonce: Data(sealed.nonce).base64EncodedString(),
-                ct: combined.base64URLEncodedString(),
-                aad: aad.base64URLEncodedString()
+                ct: combined.base64EncodedString(),
+                aad: aad.base64EncodedString()
             )
         } catch {
             throw CryptoError.encryptionFailed
@@ -53,18 +54,27 @@ public final class EncryptionService {
     // MARK: - Decrypt
     
     public func decrypt(
+        userId: String,
         domain: CryptoDomain,
         recordId: String,
-        envelope: EncryptedEnvelope
+        envelope: EncryptedEnvelope,
+        verifyEnvelopeAAD: Bool = true
     ) throws -> Data {
         guard envelope.v == 1 else { throw CryptoError.unspportedVersion(envelope.v) }
         guard envelope.alg == "A256GCM" else { throw CryptoError.invalidEnvelope }
         
-        let (_, masterKey) = try keyManagement.getOrCreateMasterKey()
+        guard let kid = UUID(uuidString: envelope.kid) else { throw CryptoError.invalidEnvelope }
+        
+        let masterKey = try keyManagement.masterKey(for: kid)
         let domainKey = KeyDerivation.deriveDomainKey(masterKey: masterKey, domain: domain)
         let recordKey = KeyDerivation.deriveRecordKey(domainKey: domainKey, recordId: recordId)
         
-        let expectedAAD = AADBuilder.build(version: envelope.v, domain: domain, recordId: recordId)
+        let expectedAAD = AADBuilder.build(version: envelope.v, userId: userId, domain: domain, recordId: recordId)
+        
+        if verifyEnvelopeAAD {
+            guard let envelopeAAD = Data(base64URLString: envelope.aad) else { throw CryptoError.invalidEnvelope }
+            guard envelopeAAD == expectedAAD else { throw CryptoError.invalidEnvelope }
+        }
         
         guard let combined = Data(base64URLString: envelope.ct) else { throw CryptoError.invalidEnvelope }
         
@@ -74,5 +84,6 @@ public final class EncryptionService {
         } catch {
             throw CryptoError.decryptionFailed
         }
+        
     }
 }

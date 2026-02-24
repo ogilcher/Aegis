@@ -14,10 +14,12 @@ import Foundation
 public enum AADBuilder {
     public static func build(
         version: Int,
+        userId: String,
         domain: CryptoDomain,
         recordId: String
     ) -> Data {
-        let s = "v=\(version)|domain=\(domain.rawValue)|rid=\(recordId)"
+        // Stable contract
+        let s = "v=\(version)|uid=\(userId)|domain=\(domain.rawValue)|rid=\(recordId)"
         return Data(s.utf8)
     }
 }
