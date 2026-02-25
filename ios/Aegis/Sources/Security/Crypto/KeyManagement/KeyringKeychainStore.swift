@@ -16,15 +16,18 @@ public final class KeyringKeychainStore: KeyringStoring {
     private let keychain: KeychainStore
     private let account: String
     private let service: String
+    private let protection: KeyProtection
     
     public init(
         keychian: KeychainStore = KeychainStore(),
         account: String = "aegis.keyring",
-        service: String = "com.aegis.security"
+        service: String = "com.aegis.security",
+        protection: KeyProtection = .whenUnlockedThisDeviceOnly
     ) {
         self.keychain = keychian
         self.account = account
         self.service = service
+        self.protection = protection
     }
     
     // MARK: - Load
@@ -41,7 +44,8 @@ public final class KeyringKeychainStore: KeyringStoring {
         let data: Data
         do { data = try JSONEncoder().encode(keyring) }
         catch { throw CryptoError.keyCorrupted }
-        try keychain.upsertData(data, account: account, service: service)
+        
+        try keychain.upsertData(data, account: account, service: service, protection: protection)
     }
     
     // MARK: - Wipe

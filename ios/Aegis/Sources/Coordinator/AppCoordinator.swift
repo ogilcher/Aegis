@@ -8,50 +8,6 @@
 import SwiftUI
 import Combine
 
-// MARK: - App Screen
-
-enum AppScreen: Hashable {
-    
-    case auth(AuthPath)
-    case health(HealthPath)
-    
-    // Main root
-    case root
-    case home
-    
-    // TODO: Category Routing
-}
-
-// MARK: - Auth Path
-
-enum AuthPath: String, CaseIterable, Hashable {
-    case tosAgreement, signIn, signUp, validateEmail
-}
-
-// MARK: - Health Path
-
-enum HealthPath: String, CaseIterable, Hashable {
-    case landingPage
-}
-
-// MARK: - Helpers
-
-private extension Transaction {
-    static var noAnimation: Transaction {
-        Transaction(animation: nil)
-    }
-}
-
-@MainActor
-private func lpUpdateWithoutAnimation(_ body: () -> Void) {
-    withTransaction(.noAnimation, body)
-}
-
-protocol SessionProviding {
-    func getAuthenticatedUser() throws -> AuthDataResultModel
-    func signOut() throws
-}
-
 // MARK: - App Coordinator
 
 @MainActor
@@ -60,6 +16,7 @@ final class AppCoordinator: ObservableObject {
     // MARK: - Dependencies
     
     var authEngine: AuthenticationEngine?
+    var security: SecurityServices?
     
     // MARK: - Navigation state
     
@@ -84,9 +41,9 @@ final class AppCoordinator: ObservableObject {
     private var isApplyingGate = false
     private var didBootstrap = false
     
-    // MARK: - Init
-    
     init() {}
+    
+    // MARK: - Main Bootstrap
     
     @MainActor
     func bootstrapSession() async {
@@ -105,6 +62,25 @@ final class AppCoordinator: ObservableObject {
         
         guard !didBootstrap else { return }
         didBootstrap = true
+        
+        // MARK: - Security boostrap (E2EE foundation)
+        
+        do {
+            let config = SecurityBootstrap.Config(keyProtection: .userPresenceThisDeviceOnly)
+            self.security = try SecurityBootstrap.build(config: config)
+            print("bootstrap: security ready -> userId=\(self.security?.userId ?? "nil")")
+        } catch {
+            // If security bootstrap fails, treat it as a fatal for E2EE
+            print("bootstrap: security bootstrap failed: \(error)")
+            
+            lpUpdateWithoutAnimation {
+                self.isAuthenticated = false
+                self.user = nil
+                self.authViewModel = nil
+                self.goToRoot(.root)
+            }
+            return
+        }
         
         // Starting bootstrap sequence
         print("bootstrap: starting...")
@@ -206,4 +182,22 @@ final class AppCoordinator: ObservableObject {
     func popToRoot() {
         path.removeAll()
     }
+}
+
+// MARK: - Helpers
+
+private extension Transaction {
+    static var noAnimation: Transaction {
+        Transaction(animation: nil)
+    }
+}
+
+@MainActor
+private func lpUpdateWithoutAnimation(_ body: () -> Void) {
+    withTransaction(.noAnimation, body)
+}
+
+protocol SessionProviding {
+    func getAuthenticatedUser() throws -> AuthDataResultModel
+    func signOut() throws
 }

@@ -73,3 +73,58 @@ public final class KeychainStore {
         }
     }
 }
+
+public extension KeychainStore {
+    
+    func upsertData (
+        _ data: Data,
+        account: String,
+        service: String,
+        protection: KeyProtection
+    ) throws {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: account,
+            kSecAttrService as String: service
+        ]
+        
+        let attrs: [String: Any]
+        
+        switch protection {
+        case .whenUnlockedThisDeviceOnly:
+            attrs = [
+                kSecValueData as String: data,
+                kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+            ]
+            
+            
+        case .userPresenceThisDeviceOnly:
+            var error: Unmanaged<CFError>?
+            guard let access =
+                    SecAccessControlCreateWithFlags(
+                        nil,
+                        kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                        [.userPresence],
+                        &error
+                    ) else {
+                throw CryptoError.keyCorrupted
+            }
+            
+            attrs = [
+                kSecValueData as String: data,
+                kSecAttrAccessControl as String: access
+            ]
+        }
+        
+        let status = SecItemUpdate(query as CFDictionary, attrs as CFDictionary)
+        if status == errSecItemNotFound {
+            var addQuery = query
+            addQuery.merge(attrs) { _, new in new }
+            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+            guard addStatus == errSecSuccess else { throw CryptoError.keyCorrupted }
+            return
+        }
+        
+        guard status == errSecSuccess else { throw CryptoError.keyCorrupted }
+    }
+}
